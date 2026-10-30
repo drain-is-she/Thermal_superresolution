@@ -50,5 +50,5 @@ Browse the [output gallery](output_samples/) to compare saved artifacts across m
 - [ ] Publish comparable input/output panels and evaluation settings.
 - [ ] Document checkpoint availability and reproducibility for each experiment.
 
-Built and maintained by [Vansh Joshi](https://github.com/Vansh-A1).
+A collaborative project by [Priyanshi Goyal](https://github.com/drain-is-she) and [Vansh Joshi](https://github.com/Vansh-A1).
 
