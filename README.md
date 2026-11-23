@@ -35,6 +35,23 @@ These are experimental directions represented by the code. The saved examples ar
 
 The repository does not include a complete dataset or trained checkpoint bundle. Some scripts use local paths, so configuring your environment is part of reproducing an experiment.
 
+## Lightweight CPU checks
+
+With PyTorch installed, run from the repository root:
+
+```bash
+OMP_NUM_THREADS=1 python -m unittest discover -s tests -v
+```
+
+The two checks cover importing the SRCNN L1 inference model without checkpoint
+reads, output-directory creation, device probing, or optional image packages,
+and a tiny CPU forward pass with finite output and preserved image dimensions.
+Importing `SRCNN` from `inference.srcnn_l1_inference` now only defines the model
+and helpers. Running the file directly still starts its original inference loop
+and requires the configured local paths, checkpoint, Torchvision, Pillow, and
+`pytorch_msssim` (for SSIM). Other inference scripts have not been refactored.
+These checks do not validate trained reconstruction quality or full evaluation.
+
 ## Sample output
 
 An output from the edge-injection experiment:
