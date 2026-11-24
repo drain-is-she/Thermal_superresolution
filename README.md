@@ -43,14 +43,38 @@ With PyTorch installed, run from the repository root:
 OMP_NUM_THREADS=1 python -m unittest discover -s tests -v
 ```
 
-The two checks cover importing the SRCNN L1 inference model without checkpoint
+The five checks cover importing the SRCNN L1 inference model without checkpoint
 reads, output-directory creation, device probing, or optional image packages,
-and a tiny CPU forward pass with finite output and preserved image dimensions.
+a tiny CPU forward pass with finite output and preserved image dimensions,
+CLI argument handling, and loading synthetic checkpoint weights onto CPU.
 Importing `SRCNN` from `inference.srcnn_l1_inference` now only defines the model
-and helpers. Running the file directly still starts its original inference loop
-and requires the configured local paths, checkpoint, Torchvision, Pillow, and
+and helpers. Running the file directly requires explicit input/checkpoint paths as shown below,
+plus Torchvision, Pillow, and
 `pytorch_msssim` (for SSIM). Other inference scripts have not been refactored.
 These checks do not validate trained reconstruction quality or full evaluation.
+
+## SRCNN L1 inference command
+
+```bash
+python inference/srcnn_l1_inference.py \
+  --lq-dir /path/to/LQ \
+  --gt-dir /path/to/HR \
+  --checkpoint /path/to/best_SRCNN.pth \
+  --output-dir /path/to/new-results \
+  --device cpu
+```
+
+The three input paths are required. `--output-dir` defaults to `srcnn_l1_output`;
+use a separate output directory to preserve inputs and previous results.
+`--device` accepts `cpu`, `cuda`, or `auto` (the default, choosing CUDA if available).
+Checkpoint tensors are mapped to the selected device and loaded as a state
+dictionary with `weights_only=True`. `--help` works without optional image packages.
+
+The original preprocessing still resizes low-resolution inputs to 448 × 640;
+ground-truth images must have that size and matching filenames. Supply nonempty
+folders containing image pairs. This change does not alter the model architecture,
+normalization, metrics, or saved image format. Full dataset evaluation has not
+been verified by the synthetic tests.
 
 ## Sample output
 

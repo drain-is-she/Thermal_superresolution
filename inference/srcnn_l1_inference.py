@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import os
+import argparse
+from pathlib import Path
 
 # ---------------- MODEL ----------------
 class SRCNN(nn.Module):
@@ -36,15 +38,32 @@ def calculate_ssim(sr, hr):
     return ssim(sr, hr, data_range=1.0, size_average=True)
 
 
-def main():
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description="Evaluate an SRCNN L1 checkpoint on paired thermal images.")
+    parser.add_argument("--lq-dir", type=Path, required=True, help="Low-resolution image directory")
+    parser.add_argument("--gt-dir", type=Path, required=True, help="Ground-truth directory with matching filenames (448 x 640)")
+    parser.add_argument("--checkpoint", type=Path, required=True, help="SRCNN state dictionary")
+    parser.add_argument("--output-dir", type=Path, default=Path("srcnn_l1_output"))
+    parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
+    return parser.parse_args(argv)
+
+
+def load_model(checkpoint, device):
+    model = SRCNN().to(device)
+    model.load_state_dict(torch.load(checkpoint, map_location=device, weights_only=True))
+    return model.eval()
+
+
+def main(argv=None):
+    args = parse_args(argv)
     from torchvision import transforms
     from PIL import Image
 
     # ---------------- PATHS ----------------
-    lq_dir = "/home/projectwork/Deep_learning/thermal/val/LQ"
-    gt_dir = "/home/projectwork/Deep_learning/thermal/val/HR"
+    lq_dir = args.lq_dir
+    gt_dir = args.gt_dir
 
-    output_dir = "srcnn_l1_output"
+    output_dir = args.output_dir
     os.makedirs(output_dir, exist_ok=True)
 
 
@@ -61,11 +80,11 @@ def main():
 
 
     # ---------------- LOAD MODEL ----------------
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    model = SRCNN().to(device)
-    model.load_state_dict(torch.load("/home/projectwork/Deep_learning/VANSH_WORK/models_thermal/srcnn_l1/best_SRCNN.pth"))
-    model.eval()
+    device_name = args.device
+    if device_name == "auto":
+        device_name = "cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device(device_name)
+    model = load_model(args.checkpoint, device)
 
 
     # ---------------- INFERENCE ----------------
