@@ -43,10 +43,11 @@ With PyTorch installed, run from the repository root:
 OMP_NUM_THREADS=1 python -m unittest discover -s tests -v
 ```
 
-The five checks cover importing the SRCNN L1 inference model without checkpoint
+The nine checks cover importing the SRCNN L1 inference model without checkpoint
 reads, output-directory creation, device probing, or optional image packages,
 a tiny CPU forward pass with finite output and preserved image dimensions,
-CLI argument handling, and loading synthetic checkpoint weights onto CPU.
+CLI argument handling, loading synthetic checkpoint weights onto CPU, and
+file-pair discovery with early rejection of missing or empty inputs.
 Importing `SRCNN` from `inference.srcnn_l1_inference` now only defines the model
 and helpers. Running the file directly requires explicit input/checkpoint paths as shown below,
 plus Torchvision, Pillow, and
@@ -72,7 +73,14 @@ dictionary with `weights_only=True`. `--help` works without optional image packa
 
 The original preprocessing still resizes low-resolution inputs to 448 × 640;
 ground-truth images must have that size and matching filenames. Supply nonempty
-folders containing image pairs. This change does not alter the model architecture,
+folders containing image pairs. Discovery accepts PNG, JPG/JPEG, BMP, and TIF/TIFF
+extensions case-insensitively, ignores other files and subdirectories, and sorts
+filenames. Every selected low-resolution file must have an exact filename match
+in the ground-truth folder; extra ground-truth files are unused. Missing folders,
+empty selections, and missing pairs fail before optional imports, checkpoint
+loading, or output-directory creation. File contents and dimensions are still
+checked only when processed; the discovery tests use placeholder files.
+This change does not alter the model architecture,
 normalization, metrics, or saved image format. Full dataset evaluation has not
 been verified by the synthetic tests.
 

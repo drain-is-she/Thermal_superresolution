@@ -54,8 +54,25 @@ def load_model(checkpoint, device):
     return model.eval()
 
 
+def discover_image_names(lq_dir, gt_dir):
+    lq_dir, gt_dir = Path(lq_dir), Path(gt_dir)
+    for directory in (lq_dir, gt_dir):
+        if not directory.is_dir():
+            raise NotADirectoryError(f"Image directory not found: {directory}")
+    extensions = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
+    names = sorted(path.name for path in lq_dir.iterdir()
+                   if path.is_file() and path.suffix.lower() in extensions)
+    if not names:
+        raise ValueError(f"No supported images found in {lq_dir}")
+    missing = [name for name in names if not (gt_dir / name).is_file()]
+    if missing:
+        raise FileNotFoundError(f"Missing ground-truth files in {gt_dir}: {', '.join(missing)}")
+    return names
+
+
 def main(argv=None):
     args = parse_args(argv)
+    image_names = discover_image_names(args.lq_dir, args.gt_dir)
     from torchvision import transforms
     from PIL import Image
 
@@ -88,7 +105,6 @@ def main(argv=None):
 
 
     # ---------------- INFERENCE ----------------
-    image_names = sorted(os.listdir(lq_dir))
 
     total_psnr = 0
     total_ssim = 0
