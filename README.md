@@ -54,6 +54,25 @@ plus Torchvision, Pillow, and
 `pytorch_msssim` (for SSIM). Other inference scripts have not been refactored.
 These checks do not validate trained reconstruction quality or full evaluation.
 
+### Automated CPU checks
+
+GitHub Actions runs the nine regression checks on pushes to `main`, pull requests,
+and manual dispatch. The workflow uses Ubuntu 24.04, Python 3.13, CPU-only PyTorch
+2.12.1, read-only repository permissions, pinned action revisions, and a ten-minute
+timeout. It does not require thermal images, trained weights, or a GPU.
+
+To reproduce its direct dependency in a fresh Python 3.13 virtual environment:
+
+```bash
+python -m pip install torch==2.12.1+cpu --index-url https://download.pytorch.org/whl/cpu
+OMP_NUM_THREADS=1 python -m unittest discover -s tests -v
+```
+
+Transitive dependencies are resolved by pip rather than locked. This minimal
+environment covers SRCNN import, argument handling, synthetic weights, forward
+execution, and file discovery; it does not include the optional image-evaluation
+packages or establish that full inference or other model families work.
+
 ## SRCNN L1 inference command
 
 ```bash
