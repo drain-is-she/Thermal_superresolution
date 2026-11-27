@@ -28,9 +28,8 @@ def denormalize(x):
 
 def calculate_psnr(sr, hr):
     mse = torch.mean((sr - hr) ** 2)
-    if mse == 0:
-        return 100
-    return 10 * torch.log10(1.0 / mse)
+    # Unit data range: -10 log10(MSE), including +inf for an exact match.
+    return -10 * torch.log10(mse)
 
 def calculate_ssim(sr, hr):
     from pytorch_msssim import ssim

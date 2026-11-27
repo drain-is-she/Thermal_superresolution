@@ -43,11 +43,12 @@ With PyTorch installed, run from the repository root:
 OMP_NUM_THREADS=1 python -m unittest discover -s tests -v
 ```
 
-The nine checks cover importing the SRCNN L1 inference model without checkpoint
+The twelve checks cover importing the SRCNN L1 inference model without checkpoint
 reads, output-directory creation, device probing, or optional image packages,
 a tiny CPU forward pass with finite output and preserved image dimensions,
 CLI argument handling, loading synthetic checkpoint weights onto CPU, and
-file-pair discovery with early rejection of missing or empty inputs.
+file-pair discovery with early rejection of missing or empty inputs, and
+PSNR values for known errors and exact matches.
 Importing `SRCNN` from `inference.srcnn_l1_inference` now only defines the model
 and helpers. Running the file directly requires explicit input/checkpoint paths as shown below,
 plus Torchvision, Pillow, and
@@ -56,7 +57,7 @@ These checks do not validate trained reconstruction quality or full evaluation.
 
 ### Automated CPU checks
 
-GitHub Actions runs the nine regression checks on pushes to `main`, pull requests,
+GitHub Actions runs the twelve regression checks on pushes to `main`, pull requests,
 and manual dispatch. The workflow uses Ubuntu 24.04, Python 3.13, CPU-only PyTorch
 2.12.1, read-only repository permissions, pinned action revisions, and a ten-minute
 timeout. It does not require thermal images, trained weights, or a GPU.
@@ -102,6 +103,16 @@ checked only when processed; the discovery tests use placeholder files.
 This change does not alter the model architecture,
 normalization, metrics, or saved image format. Full dataset evaluation has not
 been verified by the synthetic tests.
+
+### PSNR convention
+
+SRCNN L1 evaluates PSNR with a fixed data range of 1 after denormalizing and
+clamping its output to `[0, 1]`: `PSNR = -10 * log10(MSE)`. Exact matches return
+positive infinity, rather than the previous artificial 100 dB cap. Consequently,
+the arithmetic mean printed by the script is also infinite if any evaluated
+pair is an exact match. Nonzero-error scores retain the same mathematical
+formula. This correction applies only to `srcnn_l1_inference.py`; saved results
+have not been recomputed and other model-specific metric helpers are unchanged.
 
 ## Sample output
 
