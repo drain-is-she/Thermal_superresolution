@@ -26,12 +26,21 @@ class SRCNN(nn.Module):
 def denormalize(x):
     return (x * 0.5) + 0.5
 
+def _validate_metric_shapes(sr, hr):
+    if sr.shape != hr.shape:
+        raise ValueError(
+            f"Prediction and target shapes must match; got {tuple(sr.shape)} and {tuple(hr.shape)}"
+        )
+
+
 def calculate_psnr(sr, hr):
+    _validate_metric_shapes(sr, hr)
     mse = torch.mean((sr - hr) ** 2)
     # Unit data range: -10 log10(MSE), including +inf for an exact match.
     return -10 * torch.log10(mse)
 
 def calculate_ssim(sr, hr):
+    _validate_metric_shapes(sr, hr)
     from pytorch_msssim import ssim
 
     return ssim(sr, hr, data_range=1.0, size_average=True)
